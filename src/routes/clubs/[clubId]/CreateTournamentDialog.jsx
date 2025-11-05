@@ -152,7 +152,6 @@ export default function CreateTournamentDialog() {
                                 Create a new tournament under your club.
                             </DialogDescription>
                         </DialogHeader>
-
                         <div className="space-y-4">
                             <FormField
                                 control={form.control}
@@ -225,13 +224,14 @@ export default function CreateTournamentDialog() {
                                 </div>
                             </div>
 
-                            <div className="flex w-full place-items-start justify-evenly divide-x gap-4">
+                            <div className="flex flex-col sm:flex-row w-full place-items-start justify-evenly sm:divide-x gap-4">
                                 <FormField
                                     control={form.control}
                                     name="settings.rankingConfig.winPoints"
                                     render={({ field }) => (
-                                        <FormItem className="flex flex-col w-full space-y-1 place-items-start">
-                                            <FormLabel>Win points</FormLabel>
+                                        <FormItem className="flex flex-row sm:flex-col w-full space-y-1 place-items-center sm:place-items-start justify-stretch sm:justify-start">
+                                            <FormLabel className="whitespace-nowrap">Win points</FormLabel>
+                                            <div className="h-[2px] bg-accent flex-grow sm:hidden ml-4"></div>
                                             <CounterFormField field={field} />
                                             <FormMessage />
                                         </FormItem>
@@ -241,8 +241,9 @@ export default function CreateTournamentDialog() {
                                     control={form.control}
                                     name="settings.rankingConfig.drawPoints"
                                     render={({ field }) => (
-                                        <FormItem className="flex flex-col w-full space-y-1 place-items-start">
-                                            <FormLabel>Draw points</FormLabel>
+                                        <FormItem className="flex flex-row sm:flex-col w-full space-y-1 place-items-center sm:place-items-start justify-stretch sm:justify-start">
+                                            <FormLabel className="whitespace-nowrap">Draw points</FormLabel>
+                                            <div className="h-[2px] bg-accent flex-grow sm:hidden ml-4"></div>
                                             <CounterFormField field={field} />
                                             <FormMessage />
                                         </FormItem>
@@ -252,8 +253,9 @@ export default function CreateTournamentDialog() {
                                     control={form.control}
                                     name="settings.rankingConfig.lossPoints"
                                     render={({ field }) => (
-                                        <FormItem className="flex flex-col w-full space-y-1 place-items-start">
-                                            <FormLabel>Loss points</FormLabel>
+                                        <FormItem className="flex flex-row sm:flex-col w-full space-y-1 place-items-center sm:place-items-start justify-stretch sm:justify-start">
+                                            <FormLabel className="whitespace-nowrap">Loss points</FormLabel>
+                                            <div className="h-[2px] bg-accent flex-grow sm:hidden ml-4"></div>
                                             <CounterFormField field={field} />
                                             <FormMessage />
                                         </FormItem>
