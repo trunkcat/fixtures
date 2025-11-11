@@ -66,7 +66,7 @@ export default function StageItemsSection() {
 
                     <Table>
                         <TableHeader>
-                            <TableRow>
+                            <TableRow className="hover:bg-background">
                                 <TableHead className="sticky left-0 z-[2] bg-background">
                                     #
                                 </TableHead>
@@ -85,7 +85,7 @@ export default function StageItemsSection() {
                         </TableHeader>
                         <TableBody>
                             {item.inputs.map((team, i) => (
-                                <TableRow key={team._id}>
+                                <TableRow key={team._id} className="hover:bg-background">
                                     <TableCell>{i + 1}</TableCell>
                                     <TableCell className="sticky left-0 z-[2] bg-background font-semibold">
                                         {team.name}
