@@ -67,8 +67,12 @@ export default function StageItemsSection() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead colSpan={2}>Team</TableHead>
-                                {/* <TableHead>MP</TableHead> */}
+                                <TableHead className="sticky left-0 z-[2] bg-background">
+                                    #
+                                </TableHead>
+                                <TableHead className="sticky left-0 z-[2] bg-background">
+                                    Team
+                                </TableHead>
                                 <TableHead className="text-center">MP</TableHead>
                                 <TableHead className="text-center">W</TableHead>
                                 <TableHead className="text-center">D</TableHead>
@@ -76,14 +80,16 @@ export default function StageItemsSection() {
                                 <TableHead className="text-center">GF</TableHead>
                                 <TableHead className="text-center">GA</TableHead>
                                 <TableHead className="text-center">GD</TableHead>
-                                <TableHead className="text-center">Pts</TableHead>
+                                <TableHead className="text-center sticky right-0 z-[2] bg-background">Pts</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {item.inputs.map((team, i) => (
                                 <TableRow key={team._id}>
                                     <TableCell>{i + 1}</TableCell>
-                                    <TableCell>{team.name}</TableCell>
+                                    <TableCell className="sticky left-0 z-[2] bg-background font-semibold">
+                                        {team.name}
+                                    </TableCell>
                                     <TableCell className="text-center">{team.teamStats.matchesPlayed}</TableCell>
                                     <TableCell className="text-center">{team.teamStats.wins}</TableCell>
                                     <TableCell className="text-center">{team.teamStats.draws}</TableCell>
@@ -91,7 +97,9 @@ export default function StageItemsSection() {
                                     <TableCell className="text-center">{team.teamStats.goalsFor}</TableCell>
                                     <TableCell className="text-center">{team.teamStats.goalsAgainst}</TableCell>
                                     <TableCell className="text-center">{team.teamStats.goalDifference}</TableCell>
-                                    <TableCell className="text-center">{team.teamStats.points}</TableCell>
+                                    <TableCell className="text-center sticky right-0 z-[2] bg-background font-bold">
+                                        {team.teamStats.points}
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

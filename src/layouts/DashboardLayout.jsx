@@ -23,7 +23,7 @@ export function DashboardLayout() {
                 <AppSidebar />
                 <SidebarInset>
                     <main className="w-full">
-                        <nav className="sticky top-0 z-[1] flex place-items-center gap-4 border-b bg-background/50 p-3 backdrop-blur-lg">
+                        <nav className="sticky top-0 z-50 flex place-items-center gap-4 border-b bg-background/50 p-3 backdrop-blur-lg">
                             <SidebarTrigger className="size-10" />
                             <h1 className="font-medium">Fixtures</h1>
                         </nav>
