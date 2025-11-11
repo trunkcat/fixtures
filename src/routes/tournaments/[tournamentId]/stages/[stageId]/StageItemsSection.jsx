@@ -66,7 +66,7 @@ export default function StageItemsSection() {
 
                     <Table>
                         <TableHeader>
-                            <TableRow className="hover:bg-background">
+                            <TableRow className="hover:bg-inherit">
                                 <TableHead className="sticky left-0 z-[2] bg-background">
                                     #
                                 </TableHead>
