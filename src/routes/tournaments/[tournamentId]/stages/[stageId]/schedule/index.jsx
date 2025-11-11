@@ -1,5 +1,6 @@
 import { Minidenticon } from "@/components/Minidenticon";
 import { Button } from "@/components/ui/button";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
     Dialog,
     DialogClose,
@@ -10,11 +11,24 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/auth";
+import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import clsx from "clsx";
 import { HTTPError } from "ky";
-import { CircleXIcon, LoaderIcon, MinusIcon, PlusIcon, TableIcon } from "lucide-react";
+import { FilterXIcon } from "lucide-react";
+import {
+    CheckIcon,
+    ChevronsUpDownIcon,
+    CircleXIcon,
+    FilterIcon,
+    LoaderIcon,
+    MinusIcon,
+    PlusIcon,
+    TableIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
@@ -108,6 +122,11 @@ export default function SchedulePage() {
 export function StageItemRoundsSection({ stageItem }) {
     const { api } = useAuth();
 
+    const [openFilter, setOpenFilter] = useState(false);
+    const [teamIdFilter, setTeamIdFilter] = useState(null);
+    const [teamFilterString, setTeamFilterString] = useState("");
+    const [filter, setFilter] = useState(/** @type {"all" | "incomplete" | "complete"} */ ("all"));
+
     const [rounds, setRounds] = useState(
         /** @type {LoadedData<(Tourney.Round & {matches: Tourney.Match[]})[]>} */ ({
             state: "pending",
@@ -180,12 +199,104 @@ export function StageItemRoundsSection({ stageItem }) {
 
     return (
         <div className="space-y-4">
+            <div className="flex gap-2 place-items-center">
+                <Popover open={openFilter} onOpenChange={setOpenFilter}>
+                    <PopoverTrigger asChild>
+                        <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={open}
+                            className="flex-1 justify-between"
+                            size="default"
+                        >
+                            <span className="gap-2 flex place-items-center">
+                                <FilterIcon />
+                                <span>
+                                    {teamIdFilter
+                                        ? (
+                                            <>
+                                                <span className="text-muted-foreground hidden sm:inline">
+                                                    Filtering by
+                                                </span>{" "}
+                                                <span>{teams.data[teamIdFilter]?.name}</span>
+                                            </>
+                                        )
+                                        : "Filter by team"}
+                                </span>
+                            </span>
+                            <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0" align="start">
+                        <Command shouldFilter={false}>
+                            <CommandInput
+                                placeholder="Search team..."
+                                value={teamFilterString}
+                                onValueChange={setTeamFilterString}
+                            />
+                            <CommandList>
+                                <CommandEmpty>No teams found.</CommandEmpty>
+                                <CommandGroup>
+                                    {Object.values(teams.data)
+                                        .filter((team) => {
+                                            return team.name.toLowerCase().includes(teamFilterString.toLowerCase());
+                                        }).map((team) => (
+                                            <CommandItem
+                                                key={team._id}
+                                                value={team._id}
+                                                onSelect={(currentValue) => {
+                                                    setTeamIdFilter((current) =>
+                                                        current === team._id ? null : team._id
+                                                    );
+                                                    setOpenFilter(false);
+                                                }}
+                                            >
+                                                <CheckIcon
+                                                    className={cn(
+                                                        "mr-2 h-4 w-4",
+                                                        teamIdFilter === team._id ? "opacity-100" : "opacity-0",
+                                                    )}
+                                                />
+                                                {team.name}
+                                            </CommandItem>
+                                        ))}
+                                </CommandGroup>
+                            </CommandList>
+                        </Command>
+                    </PopoverContent>
+                </Popover>
+
+                <Select defaultValue="all" value={filter} onValueChange={setFilter}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Show all</SelectItem>
+                        <SelectItem value="incomplete">Incomplete</SelectItem>
+                        <SelectItem value="complete">Complete</SelectItem>
+                    </SelectContent>
+                </Select>
+
+                <Button
+                    variant="outline"
+                    disabled={filter === "all" && teamIdFilter == null}
+                    onClick={() => {
+                        setFilter("all");
+                        setTeamIdFilter(null);
+                    }}
+                >
+                    <FilterXIcon /> <span className="hidden sm:inline">Clear</span>
+                </Button>
+            </div>
+
             {rounds.data.map((round) => (
                 <RoundSection
                     key={round._id}
                     round={round}
                     teams={teams.data}
                     setRounds={setRounds}
+                    filter={filter}
+                    teamIdFilter={teamIdFilter}
                 />
             ))}
         </div>
@@ -196,17 +307,27 @@ export function StageItemRoundsSection({ stageItem }) {
  * @param {{
  * round: Tourney.Round & {matches: Tourney.Match[]};
  * teams: Record<string, Tourney.Team>
- * setRounds: React.Dispatch<React.SetStateAction<LoadedData<(Tourney.Round & {matches: Tourney.Match[]})[]>>>
+ * setRounds: React.Dispatch<React.SetStateAction<LoadedData<(Tourney.Round & {matches: Tourney.Match[]})[]>>>;
+ * filter: string;
+ * teamIdFilter: string;
  * }} param0
  */
-function RoundSection({ round, teams, setRounds }) {
+function RoundSection({ round, teams, setRounds, filter, teamIdFilter }) {
     const [selectedMatch, setSelectedMatch] = useState(/** @type {Tourney.Match | null} */ (null));
+
+    const filteredMatches = round.matches.filter((match) => {
+        const matchStatus = match.startTime != null && match.endTime != null ? "complete" : "incomplete";
+        return (teamIdFilter == null || match.participant1 === teamIdFilter
+            || match.participant2 === teamIdFilter) && (filter === "all" || matchStatus === filter);
+    });
+
+    if (filteredMatches.length === 0) return;
 
     return (
         <div className="space-y-2">
             <div className="font-medium">Round {round.number}</div>
             <div className="divide-y border rounded-sm">
-                {round.matches.map((match) => {
+                {filteredMatches.map((match) => {
                     /** @param {{teamId: string | undefined, score: number | undefined}} param0 */
                     function Team({ teamId, score }) {
                         const otherTeamScore = match.participant1 != null && match.participant1 === teamId
