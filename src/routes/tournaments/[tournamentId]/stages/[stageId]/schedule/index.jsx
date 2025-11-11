@@ -126,6 +126,7 @@ export function StageItemRoundsSection({ stageItem }) {
     const [teamIdFilter, setTeamIdFilter] = useState(null);
     const [teamFilterString, setTeamFilterString] = useState("");
     const [filter, setFilter] = useState(/** @type {"all" | "incomplete" | "complete"} */ ("all"));
+    const [selectedMatch, setSelectedMatch] = useState(/** @type {Tourney.Match | null} */ (null));
 
     const [rounds, setRounds] = useState(
         /** @type {LoadedData<(Tourney.Round & {matches: Tourney.Match[]})[]>} */ ({
@@ -297,6 +298,8 @@ export function StageItemRoundsSection({ stageItem }) {
                     setRounds={setRounds}
                     filter={filter}
                     teamIdFilter={teamIdFilter}
+                    selectedMatch={selectedMatch}
+                    setSelectedMatch={setSelectedMatch}
                 />
             ))}
         </div>
@@ -310,11 +313,19 @@ export function StageItemRoundsSection({ stageItem }) {
  * setRounds: React.Dispatch<React.SetStateAction<LoadedData<(Tourney.Round & {matches: Tourney.Match[]})[]>>>;
  * filter: string;
  * teamIdFilter: string;
+ * selectedMatch: Tourney.Match | null;
+ * setSelectedMatch: React.Dispatch<React.SetStateAction<Tourney.Match | null>>;
  * }} param0
  */
-function RoundSection({ round, teams, setRounds, filter, teamIdFilter }) {
-    const [selectedMatch, setSelectedMatch] = useState(/** @type {Tourney.Match | null} */ (null));
-
+function RoundSection({
+    round,
+    teams,
+    setRounds,
+    filter,
+    teamIdFilter,
+    selectedMatch,
+    setSelectedMatch,
+}) {
     const filteredMatches = round.matches.filter((match) => {
         const matchStatus = match.startTime != null && match.endTime != null ? "complete" : "incomplete";
         return (teamIdFilter == null || match.participant1 === teamIdFilter
@@ -425,15 +436,15 @@ function MatchDialog({ setRounds, match, round, teams, setSelectedMatch }) {
 }
 
 /**
- * @param {{field: { onChange: (value: number) => void; value: number } }} param0
+ * @param {{field: { onChange: (value: number) => void; value: number }; disabled: boolean }} param0
  */
-function CounterFormField({ field }) {
+function CounterFormField({ field, disabled }) {
     return (
         <div className="flex place-items-center justify-evenly gap-3">
             <Button
                 variant="ghost"
                 size="icon"
-                disabled={field.value <= 0}
+                disabled={disabled || field.value <= 0}
                 onClick={() => {
                     if (field.value > 0) {
                         field.onChange(field.value - 1);
@@ -446,6 +457,7 @@ function CounterFormField({ field }) {
             <Button
                 variant="ghost"
                 size="icon"
+                disabled={disabled}
                 onClick={() => {
                     field.onChange(field.value + 1);
                 }}
@@ -516,7 +528,7 @@ function MatchDialogContent({ setRounds, match, round, teams, setSelectedMatch }
     }
 
     /** @param {z.infer<typeof updateSchema>} values */
-    function onSubmitDelete(values) {
+    function onSubmitEnd(values) {
         if (match == null) return;
         if (ending) return;
         setEnding(true);
@@ -575,7 +587,7 @@ function MatchDialogContent({ setRounds, match, round, teams, setSelectedMatch }
                                     render={({ field }) => (
                                         <FormItem className="flex flex-col w-full space-y-1 text-2xl place-items-start">
                                             <FormLabel>{teams[match.participant1].name}</FormLabel>
-                                            <CounterFormField field={field} />
+                                            <CounterFormField field={field} disabled={match.endTime != null} />
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -588,7 +600,7 @@ function MatchDialogContent({ setRounds, match, round, teams, setSelectedMatch }
                                     render={({ field }) => (
                                         <FormItem className="flex flex-col w-full space-y-1 text-2xl place-items-start">
                                             <FormLabel>{teams[match.participant2].name}</FormLabel>
-                                            <CounterFormField field={field} />
+                                            <CounterFormField field={field} disabled={match.endTime != null} />
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -599,7 +611,7 @@ function MatchDialogContent({ setRounds, match, round, teams, setSelectedMatch }
 
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Close</Button>
+                            <Button disabled={updating || ending} variant="outline">Close</Button>
                         </DialogClose>
                         {match.endTime == null && (
                             <>
@@ -608,12 +620,12 @@ function MatchDialogContent({ setRounds, match, round, teams, setSelectedMatch }
                                     onClick={async () => {
                                         await form.trigger();
                                         if (form.formState.isValid) {
-                                            await form.handleSubmit(onSubmitDelete)();
+                                            await form.handleSubmit(onSubmitEnd)();
                                         }
                                     }}
                                     disabled={updating || ending}
                                 >
-                                    {updating || ending
+                                    {ending
                                         ? <LoaderIcon className="animate-spin" />
                                         : "End match"}
                                 </Button>
@@ -626,7 +638,7 @@ function MatchDialogContent({ setRounds, match, round, teams, setSelectedMatch }
                                     }}
                                     disabled={updating || ending}
                                 >
-                                    {updating || ending
+                                    {updating
                                         ? <LoaderIcon className="animate-spin" />
                                         : "Update scores"}
                                 </Button>
